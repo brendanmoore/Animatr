@@ -5,3 +5,5 @@
 ##Usage
 	
 	var anim = new Animatr(ELEMENT_ID, options);
+
+more info to come
