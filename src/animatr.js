@@ -18,20 +18,23 @@
       'duration': 1,
       'iteration': 'infinite',
       'timingFunction': 'linear',
-      'animationName': 'Animatr'+(new Date()).getTime(),
-      'cssStart': {},
-      'cssEnd': {opacity: 0},
-      'startDelay': 0
+      'animationName': 'Animatr_' + elementId + parseInt((new Date()).getTime(), 16),
+      'startCss': {},
+      'css': {},
+      'startDelay': 0,
+      'preventImmediateStart': false
     };
 
     for(prop in args) self.options[prop] = args[prop];
 
-    self.options.cssStartString = self.stringifyCSS(self.options.cssStart);
-    self.options.cssEndString   = self.stringifyCSS(self.options.cssEnd);
+    self.options.cssStartString = self.stringifyCSS(self.options.startCss);
+    self.options.cssEndString   = self.stringifyCSS(self.options.css);
 
-    setTimeout(function(){
-      self.start();
-    }, self.options.startDelay);
+    if(!self.options.preventImmediateStart){
+      setTimeout(function(){
+        self.start();
+      }, self.options.startDelay);
+    }
 
   },
 
@@ -57,25 +60,25 @@
 
   AP.createAnimation = function(){
     var animVendor = '-'+vendor.toLowerCase(),
-    opts = this.options,
-  animDeclaration = '#'+this.elementId+'{'+
-                      animVendor+'-animation-name:' +opts.animationName+';'+
-                      animVendor+'-animation-iteration-count:'+opts.iteration+';'+
-                      animVendor+'-animation-timing-function:'+opts.timingFunction+';'+
-                      animVendor+'-animation-duration:'       +opts.duration+'s;'+
-                      'animation-name:' +opts.animationName+';'+
-                      'animation-iteration-count:'+opts.iteration+';'+
-                      'animation-timing-function:'+opts.timingFunction+';'+
-                      'animation-duration:'       +opts.duration+'s;'+
-                    '}',
-        animation = '@'+animVendor+'-keyframes '+opts.animationName +'{'+
-                      '0% {'+opts.cssStartString+'}'+
-                      '100% {'+opts.cssEndString+'}'+
-                    '}'+
-                    '@-keyframes '+opts.animationName +'{'+
-                      '0% {'+opts.cssStartString+'}'+
-                      '100% {'+opts.cssEndString+'}'+
-                    '}';
+      opts = this.options,
+      animDeclaration = '#'+this.elementId+'{'+
+                          animVendor+'-animation-name:' +opts.animationName+';'+
+                          animVendor+'-animation-iteration-count:'+opts.iteration+';'+
+                          animVendor+'-animation-timing-function:'+opts.timingFunction+';'+
+                          animVendor+'-animation-duration:'       +opts.duration+'s;'+
+                          'animation-name:' +opts.animationName+';'+
+                          'animation-iteration-count:'+opts.iteration+';'+
+                          'animation-timing-function:'+opts.timingFunction+';'+
+                          'animation-duration:'       +opts.duration+'s;'+
+                        '}',
+            animation = '@'+animVendor+'-keyframes '+opts.animationName +'{'+
+                          '0% {'+opts.cssStartString+'}'+
+                          '100% {'+opts.cssEndString+'}'+
+                        '}'+
+                        '@-keyframes '+opts.animationName +'{'+
+                          '0% {'+opts.cssStartString+'}'+
+                          '100% {'+opts.cssEndString+'}'+
+                        '}';
       this.addAnimationStyle(animDeclaration+animation);
   };
 
