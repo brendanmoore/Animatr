@@ -5,6 +5,8 @@
   <title>Animatr Demo</title>
 </head>
 <body>
+  <h1>Animatr</h1>
+  <h2>Simple CSS3 Animation</h2>
   <pre>
     var anim = new Animatr('test', {
       css: {  background: 'red',
@@ -12,12 +14,55 @@
     });
   </pre>
   <div id="test">Test</div>
+
+  <h2>Animation with event listening and callbacks</h2>
+  <pre>
+    //Set a counter
+    var i=0;
+
+    var anim = new Animatr('test2', {
+      css: { background: 'blue',
+             color: 'white' },
+      iteration: 12,
+      iterationFunction: function(e){ //Callback on completion of animation interation
+        i++;
+        this.innerHTML = 'Called ' + i + ' times';
+      },
+      startFunction: function(e){ //Callback on start of animation
+        this.innerHTML = 'Animation Start';
+      },
+      endFunction: function(e){ //Callback on end of animation
+        this.innerHTML = 'Animation End';
+      }
+
+    });
+  </pre>
+  <div id="test2">Test</div>
   <script src="src/animatr.js"></script>
   <script>
 
   var anim = new Animatr('test', {
     css: {  background: 'red',
-            padding: '25px' }
+            padding: '0 25px' }
+  });
+
+  //Set a counter
+  var i=0;
+
+  var anim = new Animatr('test2', {
+    css: { background: 'blue',
+           color: 'white' },
+    iteration: 12,
+    iterationFunction: function(e){ //Callback on completion of animation interation
+      this.innerHTML = 'Called ' + ++i + ' times';
+    },
+    startFunction: function(e){ //Callback on start of animation
+      this.innerHTML = 'Animation Start';
+    },
+    endFunction: function(e){ //Callback on end of animation
+      this.innerHTML = 'Animation End: Called ' + i + ' times';
+    }
+
   });
 
   </script>

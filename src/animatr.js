@@ -6,6 +6,10 @@
     (/trident/i).test(navigator.userAgent) ? 'ms' :
     'opera' in window ? 'O' : '',
 
+  iterationListener = (vendor!=='Moz')? vendor+'AnimationIteration' : 'animationiteration',
+  startListener = (vendor!=='Moz')? vendor+'AnimationStart' : 'animationstart';
+  endListener = (vendor!=='Moz')? vendor+'AnimationEnd' : 'animationend';
+
 
   Animatr = function(elementId, args){
 
@@ -15,14 +19,17 @@
     self.elementId = elementId;
     self.el = doc.getElementById(elementId),
     self.options = {
-      'duration': 1,
-      'iteration': 'infinite',
-      'timingFunction': 'linear',
-      'animationName': 'Animatr_' + elementId + parseInt((new Date()).getTime(), 16),
-      'startCss': {},
-      'css': {},
-      'startDelay': 0,
-      'preventImmediateStart': false
+      duration: 1,
+      iteration: 'infinite',
+      timingFunction: 'linear',
+      animationName: 'Animatr_' + elementId + parseInt((new Date()).getTime(), 16),
+      startCss: {},
+      css: {},
+      startDelay: 0,
+      preventImmediateStart: false,
+      iterationFunction: function(e){console.log(e, this);},
+      startFunction: function(e){console.log(e, this);},
+      endFunction: function(e){console.log(e, this);}
     };
 
     for(prop in args) self.options[prop] = args[prop];
@@ -35,6 +42,16 @@
         self.start();
       }, self.options.startDelay);
     }
+
+    self.el.addEventListener(iterationListener, function(e){
+      self.options.iterationFunction.apply(this, [e]);
+    });
+    self.el.addEventListener(startListener, function(e){
+      self.options.startFunction.apply(this, [e]);
+    });
+    self.el.addEventListener(endListener, function(e){
+      self.options.endFunction.apply(this, [e]);
+    });
 
   },
 
