@@ -20,22 +20,36 @@
     self.el = doc.getElementById(elementId),
     self.options = {
       duration: 1,
+      delay: 0,
       iteration: 'infinite',
       timingFunction: 'linear',
+      direction: 'normal',
+      fillMode: 'forwards',
       animationName: 'Animatr_' + elementId + parseInt((new Date()).getTime(), 16),
+      pauseOnHover: false,
       startCss: {},
       css: {},
       startDelay: 0,
       preventImmediateStart: false,
-      iterationFunction: function(e){console.log(e, this);},
-      startFunction: function(e){console.log(e, this);},
-      endFunction: function(e){console.log(e, this);}
+      iterationFunction: function(e){},
+      startFunction: function(e){},
+      endFunction: function(e){}
     };
 
     for(prop in args) self.options[prop] = args[prop];
 
-    self.options.cssStartString = self.stringifyCSS(self.options.startCss);
-    self.options.cssEndString   = self.stringifyCSS(self.options.css);
+
+    var cssStartString = self.stringifyCSS(self.options.startCss),
+    cssEndString   = self.stringifyCSS(self.options.css);
+
+    self.steps = [];
+    if(cssStartString!==''){
+      self.steps.push(cssStartString);
+    }
+    if(cssEndString!==''){
+      self.steps.push(cssEndString);
+    }
+
 
     if(!self.options.preventImmediateStart){
       setTimeout(function(){
@@ -43,16 +57,9 @@
       }, self.options.startDelay);
     }
 
-    self.el.addEventListener(iterationListener, function(e){
-      self.options.iterationFunction.apply(this, [e]);
-    });
-    self.el.addEventListener(startListener, function(e){
-      self.options.startFunction.apply(this, [e]);
-    });
-    self.el.addEventListener(endListener, function(e){
-      self.options.endFunction.apply(this, [e]);
-    });
-
+    self.el.addEventListener(iterationListener, self.options.iterationFunction);
+    self.el.addEventListener(startListener, self.options.startFunction);
+    self.el.addEventListener(endListener, self.options.endFunction);
   },
 
   AP = Animatr.prototype;
@@ -66,6 +73,19 @@
     cssAnimation.parentNode.removeChild(cssAnimation);
   };
 
+  AP.destroy = function(){
+    this.stop();
+    this.el.removeEventListener(iterationListener, this.options.iterationFunction);
+    this.el.removeEventListener(startListener, this.options.startFunction);
+    this.el.removeEventListener(endListener, this.options.endFunction);
+  };
+
+  //Chainable
+  AP.step = function(cssObj){
+    this.steps.push(this.stringifyCSS(cssObj));
+    return this;
+  };
+
   AP.stringifyCSS = function(cssObj){
     var string = '',
       prop;
@@ -76,30 +96,45 @@
   };
 
   AP.createAnimation = function(){
-    var animVendor = '-'+vendor.toLowerCase(),
+    var prefix = (!!vendor)?'-'+vendor.toLowerCase()+'-':'',
       opts = this.options,
+      steps = this.steps,
+      keyframes = this.generateKeyframes(steps),
       animDeclaration = '#'+this.elementId+'{'+
-                          animVendor+'-animation-name:' +opts.animationName+';'+
-                          animVendor+'-animation-iteration-count:'+opts.iteration+';'+
-                          animVendor+'-animation-timing-function:'+opts.timingFunction+';'+
-                          animVendor+'-animation-duration:'       +opts.duration+'s;'+
-                          'animation-name:' +opts.animationName+';'+
-                          'animation-iteration-count:'+opts.iteration+';'+
-                          'animation-timing-function:'+opts.timingFunction+';'+
-                          'animation-duration:'       +opts.duration+'s;'+
+                          //prefix+'transform: translateZ(0);'+
+                          prefix+'animation-name:' +opts.animationName+';'+
+                          prefix+'animation-iteration-count:'+opts.iteration+';'+
+                          prefix+'animation-timing-function:'+opts.timingFunction+';'+
+                          prefix+'animation-direction:'+opts.direction+';'+
+                          prefix+'animation-duration:'+opts.duration+'s;'+
+                          prefix+'animation-delay:'+opts.delay+'s;'+
+                          prefix+'animation-fill-mode:'+opts.fillMode+';'+
                         '}',
-            animation = '@'+animVendor+'-keyframes '+opts.animationName +'{'+
-                          '0% {'+opts.cssStartString+'}'+
-                          '100% {'+opts.cssEndString+'}'+
-                        '}'+
-                        '@-keyframes '+opts.animationName +'{'+
-                          '0% {'+opts.cssStartString+'}'+
-                          '100% {'+opts.cssEndString+'}'+
+            animHover = '#'+this.elementId+':hover {'+
+                        ( opts.pauseOnHover?
+                          prefix+'animation-play-state: paused;' :
+                          '') +
                         '}';
-      this.addAnimationStyle(animDeclaration+animation);
+            animation = '@'+prefix+'keyframes '+opts.animationName +'{'+
+                          keyframes +
+                        '}';
+
+      this.addAnimationStyle(animDeclaration+animHover+animation);
+  };
+
+  AP.generateKeyframes = function(steps){
+    var keyframes = '';
+    for(var i=0, l=steps.length;i<l;i++){
+        keyframes += (i/(l-1))*100 + '% {'+steps[i]+'}';
+      }
+    return keyframes;
   };
 
   AP.addAnimationStyle = function(animation){
+
+    if(doc.getElementById(this.options.animationName)){
+      this.stop();
+    }
 
     var cssAnimation = doc.createElement('style'),
       rules = doc.createTextNode(animation);
