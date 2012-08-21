@@ -27,8 +27,8 @@
       fillMode: 'forwards',
       animationName: 'Animatr_' + elementId + parseInt((new Date()).getTime(), 16),
       pauseOnHover: false,
-      startCss: {},
-      css: {},
+      startCss: null,
+      css: null,
       startDelay: 0,
       preventImmediateStart: false,
       iterationFunction: function(e){},
@@ -39,17 +39,19 @@
     for(prop in args) self.options[prop] = args[prop];
 
 
-    var cssStartString = self.stringifyCSS(self.options.startCss),
-    cssEndString   = self.stringifyCSS(self.options.css);
+    var cssStartString = !!self.options.startCss&&self.stringifyCSS(self.options.startCss),
+    cssEndString   = !!self.options.css&&self.stringifyCSS(self.options.css);
 
     self.steps = [];
-    if(cssStartString!==''){
+    if(!!cssStartString){
       self.steps.push(cssStartString);
     }
-    if(cssEndString!==''){
+    if(!!cssEndString){
+     if(!cssStartString){
+        self.steps.push('');
+      }
       self.steps.push(cssEndString);
     }
-
 
     if(!self.options.preventImmediateStart){
       setTimeout(function(){
@@ -87,6 +89,7 @@
   };
 
   AP.stringifyCSS = function(cssObj){
+    if(cssObj===null) return '';
     var string = '',
       prop;
     for(prop in cssObj){
@@ -123,10 +126,15 @@
   };
 
   AP.generateKeyframes = function(steps){
-    var keyframes = '';
-    for(var i=0, l=steps.length;i<l;i++){
-        keyframes += (i/(l-1))*100 + '% {'+steps[i]+'}';
+    var keyframes = '',
+      i, l=steps.length;
+    if(l>1){
+      for(i=0;i<l;i++){
+          keyframes += (i/(l-1))*100 + '% {'+steps[i]+'}';
       }
+    }else{
+      keyframes = '0%{}100%{'+steps[0]+'}';
+    }
     return keyframes;
   };
 
