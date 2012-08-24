@@ -23,7 +23,7 @@
     var anim = new Animatr('test2', {
       css: { background: 'blue',
              color: 'white' },
-      iteration: 12,
+      iterationCount: 12,
       iterationFunction: function(e){ //Callback on completion of animation interation
         i++;
         this.innerHTML = 'Called ' + i + ' times';
@@ -52,15 +52,15 @@
   var anim = new Animatr('test2', {
     css: { background: 'blue',
            color: 'white' },
-    iteration: 12,
+    iterationCount: 12,
     iterationFunction: function(e){ //Callback on completion of animation interation
-      this.innerHTML = 'Called ' + ++i + ' times';
+      this.innerHTML = 'Iteration Called ' + ++i + ' times';
     },
     startFunction: function(e){ //Callback on start of animation
       this.innerHTML = 'Animation Start';
     },
     endFunction: function(e){ //Callback on end of animation
-      this.innerHTML = 'Animation End: Called ' + i + ' times';
+      this.innerHTML = 'Animation End: Iteration Called ' + i + ' times';
     }
 
   });

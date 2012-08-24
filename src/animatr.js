@@ -1,31 +1,42 @@
 (function(window){
 
   var doc = document,
+    animProps = "name iteration-count timing-function direction duration delay fill-mode".split(' '),
     vendor = (/webkit/i).test(navigator.appVersion) ? 'webkit' :
-    (/firefox/i).test(navigator.userAgent) ? 'Moz' :
-    (/trident/i).test(navigator.userAgent) ? 'ms' :
-    'opera' in window ? 'O' : '',
+      (/firefox/i).test(navigator.userAgent) ? 'Moz' :
+      (/trident/i).test(navigator.userAgent) ? 'ms' :
+      'opera' in window ? 'O' : '',
+    prefix = (!!vendor)?'-'+vendor.toLowerCase()+'-':'',
+    preProp = prefix+'animation-',
+    rdashAlpha = /-([a-z])/ig,
+    fcamelCase = function (all, l) { return l.toUpperCase(); },
+    camelCase = function(s) { return s.replace(rdashAlpha, fcamelCase); },
+    iterationListener = (vendor!=='Moz')? vendor+'AnimationIteration' : 'animationiteration',
+    startListener = (vendor!=='Moz')? vendor+'AnimationStart' : 'animationstart';
+    endListener = (vendor!=='Moz')? vendor+'AnimationEnd' : 'animationend';
 
-  iterationListener = (vendor!=='Moz')? vendor+'AnimationIteration' : 'animationiteration',
-  startListener = (vendor!=='Moz')? vendor+'AnimationStart' : 'animationstart';
-  endListener = (vendor!=='Moz')? vendor+'AnimationEnd' : 'animationend';
-
-
+  /**
+   * The constructor.
+   *
+   * @param {string} elementId #id of the DOM element for animation.
+   * @param {object} args      Erm... the args.
+   */
   Animatr = function(elementId, args){
 
     var self = this,
       prop;
 
     self.elementId = elementId;
-    self.el = doc.getElementById(elementId),
+    self.el = doc.getElementById(elementId);
+    self.el.__Animatr = self;
     self.options = {
-      duration: 1,
+      duration: '1s',
       delay: 0,
-      iteration: 'infinite',
+      iterationCount: 'infinite',
       timingFunction: 'linear',
       direction: 'normal',
       fillMode: 'forwards',
-      animationName: 'Animatr_' + elementId + parseInt((new Date()).getTime(), 16),
+      name: 'Animatr_' + elementId + (new Date()).getTime(),
       pauseOnHover: false,
       startCss: null,
       css: null,
@@ -58,10 +69,10 @@
         self.start();
       }, self.options.startDelay);
     }
-
-    self.el.addEventListener(iterationListener, self.options.iterationFunction);
-    self.el.addEventListener(startListener, self.options.startFunction);
-    self.el.addEventListener(endListener, self.options.endFunction);
+    var _bind = function(){ return self.el.addEventListener.apply(self.el, Array.prototype.slice.call(arguments)); };
+    _bind(iterationListener, self.options.iterationFunction);
+    _bind(startListener, self.options.startFunction);
+    _bind(endListener, self.options.endFunction);
   },
 
   AP = Animatr.prototype;
@@ -71,8 +82,13 @@
   },
 
   AP.stop = function(){
-    var cssAnimation = doc.getElementById(this.options.animationName);
+    var cssAnimation = doc.getElementById(this.options.name);
     cssAnimation.parentNode.removeChild(cssAnimation);
+  };
+
+  AP.restart = function(){
+    this.options.animationName = 'Animatr_' + this.elementId + (new Date()).getTime();
+    this.createAnimation();
   };
 
   AP.destroy = function(){
@@ -99,43 +115,41 @@
   };
 
   AP.createAnimation = function(){
-    var prefix = (!!vendor)?'-'+vendor.toLowerCase()+'-':'',
-      opts = this.options,
-      steps = this.steps,
-      keyframes = this.generateKeyframes(steps),
-      animDeclaration = '#'+this.elementId+'{'+
-                          //prefix+'transform: translateZ(0);'+
-                          prefix+'animation-name:' +opts.animationName+';'+
-                          prefix+'animation-iteration-count:'+opts.iteration+';'+
-                          prefix+'animation-timing-function:'+opts.timingFunction+';'+
-                          prefix+'animation-direction:'+opts.direction+';'+
-                          prefix+'animation-duration:'+opts.duration+'s;'+
-                          prefix+'animation-delay:'+opts.delay+'s;'+
-                          prefix+'animation-fill-mode:'+opts.fillMode+';'+
-                        '}',
-            animHover = '#'+this.elementId+':hover {'+
-                        ( opts.pauseOnHover?
-                          prefix+'animation-play-state: paused;' :
-                          '') +
-                        '}';
-            animation = '@'+prefix+'keyframes '+opts.animationName +'{'+
-                          keyframes +
-                        '}';
 
-      this.addAnimationStyle(animDeclaration+animHover+animation);
+      var opts = this.options,
+      steps = this.steps,
+      animation = [this.generateProps(opts),
+                   this.generateHover(opts),
+                   this.generateKeyframes(steps, opts)];
+      this.addAnimationStyle(animation.join('\n'));
   };
 
-  AP.generateKeyframes = function(steps){
-    var keyframes = '',
+  AP.generateProps = function(opts){
+    var animDeclaration = ['#'+this.elementId+'{'];
+      for(var i=0, prop; i<animProps.length;i++){
+        prop = animProps[i];
+        animDeclaration.push(preProp+prop +':'+ opts[camelCase(prop)]+';');
+      }
+      animDeclaration.push('}');
+    return animDeclaration.join('\n');
+  };
+
+  AP.generateHover = function(opts){
+    return opts.pauseOnHover?['#',this.elementId,':hover {',prefix,'animation-play-state: paused;}'].join(''): '';
+  };
+
+  AP.generateKeyframes = function(steps, opts){
+    var keyframes = ['@'+prefix+'keyframes '+opts.name +'{'],
       i, l=steps.length;
     if(l>1){
       for(i=0;i<l;i++){
-          keyframes += (i/(l-1))*100 + '% {'+steps[i]+'}';
+          keyframes.push((i/(l-1))*100 + '% {'+steps[i]+'}');
       }
     }else{
-      keyframes = '0%{}100%{'+steps[0]+'}';
+      keyframes.push('0%{}100%{'+steps[0]+'}');
     }
-    return keyframes;
+    keyframes.push('}');
+    return keyframes.join('\n');
   };
 
   AP.addAnimationStyle = function(animation){
@@ -147,10 +161,10 @@
     var cssAnimation = doc.createElement('style'),
       rules = doc.createTextNode(animation);
     cssAnimation.type = 'text/css';
-    cssAnimation.id = this.options.animationName;
+    cssAnimation.id = this.options.name;
     cssAnimation.appendChild(rules);
     doc.getElementsByTagName("head")[0].appendChild(cssAnimation);
-
+    this.cssAnimation = cssAnimation;
   };
 
   window.Animatr = Animatr;
