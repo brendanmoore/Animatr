@@ -87,7 +87,7 @@
   };
 
   AP.restart = function(){
-    this.options.animationName = 'Animatr_' + this.elementId + (new Date()).getTime();
+    this.options.name = 'Animatr_' + this.elementId + (new Date()).getTime();
     this.createAnimation();
   };
 
