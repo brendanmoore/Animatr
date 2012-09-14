@@ -20,24 +20,24 @@
     //Set a counter
     var i=0;
 
-    var anim = new Animatr('test2', {
+    var anim = new Animatr(document.querySelector('.test2'), {
       css: { background: 'blue',
              color: 'white' },
       iterationCount: 12,
-      iterationFunction: function(e){ //Callback on completion of animation interation
+      iterationCallback: function(e){ //Callback on completion of animation interation
         i++;
         this.innerHTML = 'Called ' + i + ' times';
       },
-      startFunction: function(e){ //Callback on start of animation
+      startCallback: function(e){ //Callback on start of animation
         this.innerHTML = 'Animation Start';
       },
-      endFunction: function(e){ //Callback on end of animation
+      endCallback: function(e){ //Callback on end of animation
         this.innerHTML = 'Animation End';
       }
 
     });
   </pre>
-  <div id="test2">Test</div>
+  <div class="test2">Test</div>
   <script src="src/animatr.js"></script>
   <script>
 
@@ -49,17 +49,17 @@
   //Set a counter
   var i=0;
 
-  var anim = new Animatr('test2', {
+  var anim = new Animatr(document.querySelector('.test2'), {
     css: { background: 'blue',
            color: 'white' },
     iterationCount: 12,
-    iterationFunction: function(e){ //Callback on completion of animation interation
+    iterationCallback: function(e){ //Callback on completion of animation interation
       this.innerHTML = 'Iteration Called ' + ++i + ' times';
     },
-    startFunction: function(e){ //Callback on start of animation
+    startCallback: function(e){ //Callback on start of animation
       this.innerHTML = 'Animation Start';
     },
-    endFunction: function(e){ //Callback on end of animation
+    endCallback: function(e){ //Callback on end of animation
       this.innerHTML = 'Animation End: Iteration Called ' + i + ' times';
     }
 

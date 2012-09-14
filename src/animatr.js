@@ -12,13 +12,14 @@
     fcamelCase = function (all, l) { return l.toUpperCase(); },
     camelCase = function(s) { return s.replace(rdashAlpha, fcamelCase); },
     iterationListener = (vendor!=='Moz')? vendor+'AnimationIteration' : 'animationiteration',
-    startListener = (vendor!=='Moz')? vendor+'AnimationStart' : 'animationstart';
-    endListener = (vendor!=='Moz')? vendor+'AnimationEnd' : 'animationend';
+    startListener = (vendor!=='Moz')? vendor+'AnimationStart' : 'animationstart',
+    endListener = (vendor!=='Moz')? vendor+'AnimationEnd' : 'animationend',
 
   /**
    * The constructor.
    *
    * @param {string} elementId #id of the DOM element for animation.
+   *                           DOMObject of animateble element
    * @param {object} args      Erm... the args.
    */
   Animatr = function(elementId, args){
@@ -26,25 +27,74 @@
     var self = this,
       prop;
 
-    self.elementId = elementId;
-    self.el = doc.getElementById(elementId);
+    if(typeof elementId === 'string'){
+      self.elementId = elementId;
+      self.el = doc.getElementById(elementId);
+    }else if(typeof elementId === 'object'){
+      self.elementId = 'a_' + ~~(Math.random()*1000) + (new Date()).getTime();
+      self.el = elementId;
+      self.el.id = self.elementId;
+    }else{
+      throw new Error('No DOM Object or Element ID given');
+    }
+
     self.el.__Animatr = self;
     self.options = {
+
       duration: '1s',
+
       delay: 0,
+
+      // Configures the number of times the animation
+      // should repeat; you can specify infinite to
+      // repeat the animation indefinitely.
       iterationCount: 'infinite',
+
+      // Configures the timing of the animation; that is,
+      // how the animation transitions through keyframes,
+      // by establishing acceleration curves.
       timingFunction: 'linear',
+
+      // Configures whether or not the animation should
+      // alternate direction on each run through
+      // sequence or reset to the start point and repeat
+      // itself.
       direction: 'normal',
+
+      // Configures what values are applied by the
+      // animation before and after it is executing.
       fillMode: 'forwards',
-      name: 'Animatr_' + elementId + (new Date()).getTime(),
+
+      // Specifies the name of the @keyframes at-rule
+      // describing the animation's keyframes.
+      // This will be auto generated if not set.
+      name: 'Animatr_' + self.elementId + (new Date()).getTime(),
+
       pauseOnHover: false,
+
       startCss: null,
+
       css: null,
+
       startDelay: 0,
+
+      // When set to false allows for chaining
+      // of .step();
       preventImmediateStart: false,
-      iterationFunction: function(e){},
-      startFunction: function(e){},
-      endFunction: function(e){}
+
+      // Callback function fired after every iteration.
+      iterationCallback: null,
+
+      // Callback function fired on start of the
+      // animation, triggered after the inital delay has
+      // elapsed
+      startCallback: null,
+
+      // Callback function fired on completion of final
+      // interation.
+      // Will not fire if interationCount = 'infinite'
+      endCallback: null
+
     };
 
     for(prop in args) self.options[prop] = args[prop];
@@ -69,10 +119,12 @@
         self.start();
       }, self.options.startDelay);
     }
-    var _bind = function(){ return self.el.addEventListener.apply(self.el, Array.prototype.slice.call(arguments)); };
-    _bind(iterationListener, self.options.iterationFunction);
-    _bind(startListener, self.options.startFunction);
-    _bind(endListener, self.options.endFunction);
+    var _bind = function(){
+      return self.el.addEventListener.apply(self.el, Array.prototype.slice.call(arguments));
+    };
+    _bind(iterationListener, self.options.iterationCallback);
+    _bind(startListener, self.options.startCallback);
+    _bind(endListener, self.options.endCallback);
   },
 
   AP = Animatr.prototype;
