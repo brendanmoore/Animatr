@@ -97,3 +97,7 @@ Check out the demo for more info. Will add more information when I have time.
 
 ###Credits:
 [@billybobuk](https://github.com/billybobuk)
+
+## License 
+
+(The MIT License)
